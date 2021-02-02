@@ -4,22 +4,31 @@ import discord
 import json
 from discord.colour import Color
 from discord.ext.commands.core import is_owner
-import random
 import uwuify
 from asyncio.windows_events import NULL
 from ratelimit import limits
 from ratelimit import RateLimitException
-import requests
 from discord.ext import commands
 from discord import Embed, Emoji
-from time import strftime, time
+from time import time
 from datetime import datetime
-from random import randint
+from random import randint, seed
+
+JAV = 203211179613487106
+JRN = 307353668695621633
+ADT = 310479313814159364
+VG = 218931468603228160
+JB = 215188148882243584
+GL = 256993314174271489
+ADMIN = [ADT, JAV, JRN, GL]
 
 with open('secrets.json', 'r') as f:
     secrets = json.load(f)
     global TOKEN
     TOKEN = secrets["TOKEN"]
+
+bodenshit = 'bodenshits_copypasta.txt'
+vinnie = 'vinnie_copypasta.txt'
 
 # Set up Intents
 intents = discord.Intents.all()
@@ -85,7 +94,7 @@ async def record_usage(ctx):
     print(t, ":", ctx.author, 'used', ctx.command)
 
 
-random.seed()
+seed()
 custom = {
     "@": ["<:at:759418946570027028>"],
 }
@@ -142,12 +151,12 @@ def emojify(text):
             continue
         for key, val in custom.items():
             if i.upper() == key:
-                randInt = random.randint(0, len(val) - 1)
+                randInt = randint(0, len(val) - 1)
                 newText = newText + " " + val[randInt]
                 continue
         for key, val in lookup.items():
             if i.upper() == key:
-                randInt = random.randint(0, len(val) - 1)
+                randInt = randint(0, len(val) - 1)
                 newText = newText + ":" + val[randInt] + ":"
     return newText
 
@@ -155,7 +164,7 @@ def emojify(text):
 def sarcastify(text):
     newText = ""
     for i in text:
-        randInt = random.randint(0, 100)
+        randInt = randint(0, 100)
         if i == ' ':
             newText += " "
             continue
@@ -345,19 +354,28 @@ async def on_raw_reaction_remove(payload):
 @bot.command(name='emojify', help='Emojify text')
 @commands.before_invoke(record_usage)
 async def emoji(ctx, *, arg):
-    await ctx.send(emojify(arg))
+    response = emojify(arg)
+    r = []
+    while len(response) >= 2000:
+        s = response.rfind('⠀', 0, 2000)
+        res = response[:s]
+        response = response[s+1:]
+        r.append(res)
+    r.append(response)
+    for res in r:
+        await ctx.send(res)
 
 
 @bot.command(name='sarcastify', help='SaRcaStiFy tExT')
 @commands.before_invoke(record_usage)
-async def emoji(ctx, *, arg):
+async def sarcastic(ctx, *, arg):
     await ctx.send(sarcastify(arg))
 
 
 @bot.command(name='hi-vinnie', help='@\'s vinnie')
 @commands.before_invoke(record_usage)
 async def atvinnie(ctx):
-    response = '<@!218931468603228160>'
+    response = '<@!{}}>'.format(VG)
     await ctx.send(response)
 
 
@@ -382,12 +400,12 @@ async def on_member_join(member):
 async def owner(ctx):
     auth = ctx.message.author.id
     print(auth)
-    if auth == 307353668695621633:
+    if auth == JRN:
         response = "Fuck off, Josh"
-    elif auth == 310479313814159364:
+    elif auth == ADT:
         response = "You made me, master"
     else:
-        response = "<@310479313814159364> created me"
+        response = "<@{}}> created me".format(ADT)
     await ctx.send(response)
 
 
@@ -397,6 +415,109 @@ async def hugA(ctx, *, args=None):
     response = hugs[randint(0, len(hugs)-1)]
     if(args != None):
         await ctx.send(args)
+    await ctx.send(response)
+
+
+def loadPasta(pasta):
+    pastas = []
+    with open(pasta, 'r') as pf:
+        i = 0
+        spaghet = []
+        for line in pf.readlines():
+            line = line.strip()
+            # print(line)
+            if line == '':
+                pastas.append(spaghet)
+                spaghet = []
+                continue
+            spaghet.append(line)
+        pf.close()
+    return pastas
+
+
+def savePasta(pasta, spaghet):
+    spaghet = " ".join(spaghet)
+    print(spaghet)
+
+    with open(pasta, 'a') as pf:
+        pf.write(spaghet)
+        pf.write("\n\n")
+    pf.close()
+
+
+def parseArgs(args):
+    num = None
+    mod = None
+    if args:
+        for i in range(len(args)):
+            if i > 1:
+                break
+            if args[i].isnumeric():
+                num = int(args[i])
+            else:
+                mod = args[i]
+    return(num, mod)
+
+
+@bot.command(name='vinniepasta', help='!vinniepasta [num, -e, -s]\nSends a vinnie copypasta\nnum to select, -e to emojify, -s to sarcastify ')
+@commands.before_invoke(record_usage)
+async def vinniepastaa(ctx, *args):
+    (num, mod) = parseArgs(args)
+
+    CP = loadPasta(vinnie)
+    e = mod == '-e' or mod == 'emojify'
+    s = mod == '-s' or mod == 'sarcastify'
+    i = randint(0, 10000)
+
+    if num is not None:
+        i = num
+    cp = CP[i % len(CP)]
+    await ctx.send('<@!{}>'.format(VG))
+    for line in cp:
+        if s:
+            line = sarcastify(line)
+        elif e:
+            line = emojify(line)
+        await ctx.send(line)
+
+
+@bot.command(name='shitpasta', help='!shitpasta [num, -e, -s]\nSends a bodenshit copypasta\nnum to select, -e to emojify, -s to sarcastify ')
+@commands.before_invoke(record_usage)
+async def shitpasta(ctx, *args):
+    (num, mod) = parseArgs(args)
+
+    CP = loadPasta(bodenshit)
+    e = mod == '-e' or mod == 'emojify'
+    s = mod == '-s' or mod == 'sarcastify'
+    i = randint(0, 10000)
+    if num is not None:
+        i = num
+    cp = CP[i % len(CP)]
+    await ctx.send('<@!{}>'.format(JB))
+    for line in cp:
+        if s:
+            line = sarcastify(line)
+        elif e:
+            line = emojify(line)
+        await ctx.send(line)
+
+
+@bot.command(name='newpasta', help='Save a new pasta')
+async def newpasta(ctx, arg0, *args):
+    done = False
+    location = ''
+    if arg0 == 'vinnie' and (ctx.author.id == VG or ctx.author.id in ADMIN):
+        savePasta(vinnie, args)
+        location = 'vinniepasta'
+        done = True
+    elif arg0 == 'bodenshit' and (ctx.author.id == JB or ctx.author.id in ADMIN):
+        savePasta(bodenshit, args)
+        location = 'bodenshit'
+        done = True
+    if done:
+        response = 'Saved to {}'.format(location)
+    else:
+        response = 'You dun fucked up'
     await ctx.send(response)
 
 bot.run(TOKEN)
