@@ -1,10 +1,11 @@
+from re import findall
 from discord.ext.commands import Bot
 import discord
 # json stuff
 import json
 from discord.colour import Color
 from discord.ext.commands.core import is_owner
-import uwuify
+from uwuify import uwu
 from asyncio.windows_events import NULL
 from ratelimit import limits
 from ratelimit import RateLimitException
@@ -381,14 +382,17 @@ async def atvinnie(ctx):
 
 @bot.command(name='uwu', help='You already know')
 @commands.before_invoke(record_usage)
-async def uwu(ctx, *, args):
-    await ctx.send(uwuify.uwu(args))
+async def uwuify(ctx, *, args):
+    await ctx.send(uwu(args))
 
 
-# @bot.command(name='test', help='Test shit out')
-# @commands.before_invoke(record_usage)
-# async def echo(ctx, *, args):
-#     await ctx.send(args)
+@bot.command(name='test', help='Test shit out')
+@commands.before_invoke(record_usage)
+async def echo(ctx, name, args=None):
+    print(name)
+    await ctx.send(name)
+
+
 @bot.event
 async def on_member_join(member):
     role = discord.utils.get(member.guild.roles, id=798949146055934053)
@@ -459,15 +463,33 @@ def parseArgs(args):
     return(num, mod)
 
 
-@bot.command(name='vinniepasta', help='!vinniepasta [num, -e, -s]\nSends a vinnie copypasta\nnum to select, -e to emojify, -s to sarcastify ')
+EMOJIFY = ['e', '-e', 'emojify', 'emoji']
+SARCASTIFY = ['s', '-s', 'sarcastify', 'sarcastic']
+UWUIFY = ['u', '-u', 'uwuify', 'uwu']
+
+
+def getIdFromAt(arg):
+    reg = '[0-9]*'
+    id = findall(reg, arg)[3]
+    good = id.isnumeric()
+    return (id, good)
+
+
+@bot.command(name='pasta', help='!vinniepasta [num, -e, -s]\nSends a vinnie copypasta\nnum to select, -e to emojify, -s to sarcastify ')
 @commands.before_invoke(record_usage)
-async def vinniepastaa(ctx, *args):
+async def pasta(ctx, at, *args):
+    (id, good) = getIdFromAt(at)
+    if not good:
+        ctx.send("First param must be @someone")
+
     (num, mod) = parseArgs(args)
 
-    CP = loadPasta(vinnie)
-    e = mod == '-e' or mod == 'emojify'
-    s = mod == '-s' or mod == 'sarcastify'
-    i = randint(0, 10000)
+    CP = loadPasta('./pastas/'+str(id)+'.txt')
+    e = mod in EMOJIFY
+    s = mod in SARCASTIFY
+    u = mod in UWUIFY
+
+    i = randint(0, len(CP)-1)
 
     if num is not None:
         i = num
@@ -478,6 +500,34 @@ async def vinniepastaa(ctx, *args):
             line = sarcastify(line)
         elif e:
             line = emojify(line)
+        elif u:
+            line = uwu(line)
+        await ctx.send(line)
+
+
+@bot.command(name='vinniepasta', help='!vinniepasta [num, -e, -s]\nSends a vinnie copypasta\nnum to select, -e to emojify, -s to sarcastify ')
+@commands.before_invoke(record_usage)
+async def vinniepastaa(ctx, *args):
+    (num, mod) = parseArgs(args)
+
+    CP = loadPasta(vinnie)
+    e = mod in EMOJIFY
+    s = mod in SARCASTIFY
+    u = mod in UWUIFY
+
+    i = randint(0, len(CP)-1)
+
+    if num is not None:
+        i = num
+    cp = CP[i % len(CP)]
+    await ctx.send('<@!{}>'.format(VG))
+    for line in cp:
+        if s:
+            line = sarcastify(line)
+        elif e:
+            line = emojify(line)
+        elif u:
+            line = uwu(line)
         await ctx.send(line)
 
 
@@ -487,8 +537,9 @@ async def shitpasta(ctx, *args):
     (num, mod) = parseArgs(args)
 
     CP = loadPasta(bodenshit)
-    e = mod == '-e' or mod == 'emojify'
-    s = mod == '-s' or mod == 'sarcastify'
+    e = mod in EMOJIFY
+    s = mod in SARCASTIFY
+    u = mod in UWUIFY
     i = randint(0, 10000)
     if num is not None:
         i = num
@@ -499,6 +550,8 @@ async def shitpasta(ctx, *args):
             line = sarcastify(line)
         elif e:
             line = emojify(line)
+        elif u:
+            line = uwu(line)
         await ctx.send(line)
 
 
@@ -519,5 +572,6 @@ async def newpasta(ctx, arg0, *args):
     else:
         response = 'You dun fucked up'
     await ctx.send(response)
+
 
 bot.run(TOKEN)
